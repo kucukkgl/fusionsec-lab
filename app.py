@@ -9,6 +9,9 @@ from dfir.artifacts import dfir_blueprint
 from internal.fim import fim_blueprint
 from internal.log_control import log_blueprint
 
+from logging_config import setup_logging
+
+
 
 def create_app():
     app = Flask(__name__)
@@ -57,6 +60,7 @@ def get_arguments():
 
 
 if __name__ == "__main__":
+    setup_logging()          # initialize logging first
     args = get_arguments()
     app = create_app()
     app.run(host=args.host, port=args.port)
