@@ -1,5 +1,5 @@
 import argparse
-from flask import Flask
+from flask import Flask, render_template
 
 from pentest.sqli import sqli_blueprint
 from pentest.session_hijack import session_blueprint
@@ -7,23 +7,27 @@ from pentest.session_hijack import session_blueprint
 from dfir.artifacts import dfir_blueprint
 
 from internal.fim import fim_blueprint
-from internal.log_control import log_blueprint
+from internal.log_control import log_control_blueprint
 
 from logging_config import setup_logging
-
 
 
 def create_app():
     app = Flask(__name__)
 
+    # Register blueprints
     app.register_blueprint(sqli_blueprint, url_prefix="/pentest/sqli")
     app.register_blueprint(session_blueprint, url_prefix="/pentest/session")
-
     app.register_blueprint(dfir_blueprint, url_prefix="/dfir")
-
     app.register_blueprint(fim_blueprint, url_prefix="/internal/fim")
-    app.register_blueprint(log_blueprint, url_prefix="/internal/log")
+    app.register_blueprint(log_control_blueprint, url_prefix="/internal/log")
 
+    # Homepage
+    @app.route("/")
+    def index():
+        return render_template("index.html")
+
+    # Health endpoints
     @app.route("/health")
     def health():
         return "OK"
@@ -58,13 +62,9 @@ def get_arguments():
 
     return parser.parse_args()
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
 
 if __name__ == "__main__":
-    setup_logging()          # initialize logging first
+    setup_logging()
     args = get_arguments()
     app = create_app()
     app.run(host=args.host, port=args.port)
