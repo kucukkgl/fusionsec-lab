@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Logs
+logs/
+*.log
+
+# DFIR artifacts
+dfir_artifacts/
+
+# FIM generated events
+fim/created/
+fim/modified/
+fim/deleted/
+fim/uploaded/
+fim/beacon/
+
+# Virtual environments
+venv/
+.env/
+
+# OS junk
+.DS_Store
+Thumbs.db
