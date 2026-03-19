@@ -58,6 +58,10 @@ def get_arguments():
 
     return parser.parse_args()
 
+@app.route("/")
+def index():
+    return render_template("index.html")
+
 
 if __name__ == "__main__":
     setup_logging()          # initialize logging first
