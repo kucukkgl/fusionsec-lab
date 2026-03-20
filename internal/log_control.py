@@ -1,32 +1,47 @@
+# internal/log_control.py
+
+from flask import request, jsonify
 import logging
-from flask import Blueprint, request
 
-log_control_blueprint = Blueprint("log_control", __name__)
 
-# ---------------------------------------------------------
-# Map string levels to logging constants
-# ---------------------------------------------------------
-LOG_LEVELS = {
-    "debug": logging.DEBUG,
-    "info": logging.INFO,
-    "warning": logging.WARNING,
-    "error": logging.ERROR,
-    "critical": logging.CRITICAL
-}
+def register_log_routes(app):
 
-# ---------------------------------------------------------
-# Endpoint: change global log level
-# ---------------------------------------------------------
-@log_control_blueprint.route("/set_level", methods=["GET"])
-def set_level():
-    level_name = request.args.get("level", "info").lower()
+    @app.get("/internal/log/level")
+    def get_log_level():
+        level = logging.getLogger().getEffectiveLevel()
+        return jsonify({"level": logging.getLevelName(level)})
 
-    if level_name not in LOG_LEVELS:
-        logging.error(f"Invalid log level requested: {level_name}")
-        return f"Invalid log level: {level_name}"
+    @app.post("/internal/log/level")
+    def set_log_level():
+        level = request.args.get("level", "").upper()
 
-    new_level = LOG_LEVELS[level_name]
-    logging.getLogger().setLevel(new_level)
+        valid = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
-    logging.info(f"Log level changed to: {level_name.upper()}")
-    return f"Log level set to {level_name.upper()}"
+        if level not in valid:
+            return jsonify({
+                "error": "invalid level",
+                "valid_levels": valid
+            }), 400
+
+        logging.getLogger().setLevel(level)
+
+        return jsonify({
+            "status": "ok",
+            "new_level": level
+        })
+
+    @app.get("/internal/log/volcano")
+    def log_volcano():
+        """
+        Generates a burst of logs at all levels.
+        Perfect for teaching log noise, filtering, and detection engineering.
+        """
+        logger = logging.getLogger("volcano")
+
+        logger.debug("Volcano DEBUG event")
+        logger.info("Volcano INFO event")
+        logger.warning("Volcano WARNING event")
+        logger.error("Volcano ERROR event")
+        logger.critical("Volcano CRITICAL event")
+
+        return jsonify({"status": "volcano_triggered"})

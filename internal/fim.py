@@ -1,53 +1,51 @@
-import logging
-from flask import Blueprint, request
 import os
 import datetime
+from flask import jsonify, request
 
-fim_blueprint = Blueprint("fim", __name__)
+BASE_DIR = "fim"
 
-# ---------------------------------------------------------
-# Directory structure for FIM artifacts
-# ---------------------------------------------------------
-FIM_DIR = "fim"
-SUBDIRS = ["created", "modified", "deleted", "uploaded", "beacon"]
+def ensure_dirs():
+    os.makedirs(f"{BASE_DIR}/created", exist_ok=True)
+    os.makedirs(f"{BASE_DIR}/modified", exist_ok=True)
+    os.makedirs(f"{BASE_DIR}/deleted", exist_ok=True)
+    os.makedirs(f"{BASE_DIR}/uploaded", exist_ok=True)
+    os.makedirs(f"{BASE_DIR}/beacon", exist_ok=True)
 
-# Ensure directories exist (cross‑platform)
-os.makedirs(FIM_DIR, exist_ok=True)
-for sub in SUBDIRS:
-    os.makedirs(os.path.join(FIM_DIR, sub), exist_ok=True)
-
-
-# ---------------------------------------------------------
-# Helper: write a FIM artifact file
-# ---------------------------------------------------------
-def write_fim_event(event_type, filename, details):
-    timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
-
-    # Cross‑platform path construction
-    path = os.path.join(FIM_DIR, event_type, f"{timestamp}_{filename}.txt")
-
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(f"timestamp={timestamp}\n")
-        f.write(f"event_type={event_type}\n")
-        f.write(f"filename={filename}\n")
-        f.write(f"details={details}\n")
-
-    logging.info(f"FIM event created: {path}")
+def write_event(folder, filename):
+    ensure_dirs()
+    timestamp = datetime.datetime.now().isoformat()
+    path = f"{BASE_DIR}/{folder}/{timestamp}_{filename}"
+    with open(path, "w") as f:
+        f.write(f"Event: {folder}\nFilename: {filename}\nTimestamp: {timestamp}\n")
     return path
 
+def register_fim_routes(app):
 
-# ---------------------------------------------------------
-# Instructor-only FIM inject endpoint
-# ---------------------------------------------------------
-@fim_blueprint.route("/inject", methods=["GET"])
-def inject_event():
-    event_type = request.args.get("type", "created")
-    filename = request.args.get("file", "note.txt")
-    details = request.args.get("details", "no details provided")
+    @app.get("/internal/fim/create")
+    def fim_create():
+        filename = request.args.get("filename", "unknown.txt")
+        write_event("created", filename)
+        return jsonify({"status": "created", "filename": filename})
 
-    if event_type not in SUBDIRS:
-        logging.error(f"Invalid FIM event type: {event_type}")
-        return "Invalid event type"
+    @app.get("/internal/fim/modify")
+    def fim_modify():
+        filename = request.args.get("filename", "unknown.txt")
+        write_event("modified", filename)
+        return jsonify({"status": "modified", "filename": filename})
 
-    path = write_fim_event(event_type, filename, details)
-    return f"FIM event created: {path}"
+    @app.get("/internal/fim/delete")
+    def fim_delete():
+        filename = request.args.get("filename", "unknown.txt")
+        write_event("deleted", filename)
+        return jsonify({"status": "deleted", "filename": filename})
+
+    @app.get("/internal/fim/upload")
+    def fim_upload():
+        filename = request.args.get("filename", "unknown.txt")
+        write_event("uploaded", filename)
+        return jsonify({"status": "uploaded", "filename": filename})
+
+    @app.get("/internal/fim/beacon")
+    def fim_beacon():
+        write_event("beacon", "heartbeat")
+        return jsonify({"status": "beacon"})
