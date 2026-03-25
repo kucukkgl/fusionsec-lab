@@ -1,0 +1,19 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SQL Injection Lab</title>
+</head>
+<body>
+    <h1>SQL Injection Lab</h1>
+
+    <form action="/pentest/sqli/search" method="get">
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="username">
+        <button type="submit">Search</button>
+    </form>
+
+    <p>Try payloads like:</p>
+    <pre>' OR '1'='1</pre>
+</body>
+</html>
