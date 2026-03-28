@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SQLi Results</title>
+</head>
+<body>
+    <h1>Results for "{{ username }}"</h1>
+
+    <h3>Executed Query</h3>
+    <pre>{{ query }}</pre>
+
+    <h3>Returned Rows</h3>
+    {% if rows %}
+        <ul>
+            {% for row in rows %}
+                <li>ID: {{ row[0] }}, Username: {{ row[1] }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No results found.</p>
+    {% endif %}
+
+    <a href="/pentest/sqli">Back</a>
+</body>
+</html>
