@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>User Profile</h2>
+    <p>Username: {{ username }}</p>
+    <p>Session Token:</p>
+    <pre>{{ token }}</pre>
+
+    <p>You can test session hijacking by visiting:</p>
+    <pre>/pentest/session/steal?token={{ token }}</pre>
+
+    <p><a href="/pentest/session">Back</a></p>
+</body>
+</html>

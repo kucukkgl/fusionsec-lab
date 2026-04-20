@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Stolen Session</h2>
+
+    <p>Token provided:</p>
+    <pre>{{ stolen_token }}</pre>
+
+    {% if session %}
+        <p>Valid session found:</p>
+        <pre>{{ session }}</pre>
+    {% else %}
+        <p>No session exists for this token.</p>
+    {% endif %}
+
+    <p><a href="/pentest/session">Back</a></p>
+</body>
+</html>
