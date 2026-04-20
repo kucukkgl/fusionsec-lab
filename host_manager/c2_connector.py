@@ -2,6 +2,7 @@ import os
 import time
 import json
 import urllib.request
+import datetime
 
 
 # ---------------------------------------------------------
@@ -117,3 +118,33 @@ def pingit():
                         print(f"[C2] Unknown action: {action}", flush=True)
 
         time.sleep(20)
+
+def daily_message_thread():
+    print("[C2] Daily message thread started", flush=True)
+
+    while True:
+        now = datetime.datetime.now()
+        target = now.replace(hour=20, minute=0, second=0, microsecond=0)
+
+        # If 8am already passed today, schedule for tomorrow
+        if now > target:
+            target = target + datetime.timedelta(days=1)
+
+        seconds_until = (target - now).total_seconds()
+        print(f"[C2] Daily message scheduled in {int(seconds_until)} seconds", flush=True)
+        time.sleep(seconds_until)
+
+        # Pull latest JSON
+        if pull_c2_file():
+            data = load_c2_json()
+            if data:
+                msg = data.get("dailyMessage", None)
+                if msg:
+                    print("\n===== FusionSec Daily Message =====", flush=True)
+                    print(msg, flush=True)
+                    print("==================================\n", flush=True)
+                else:
+                    print("[C2] No dailyMessage found in JSON", flush=True)
+
+        # Prevent double-trigger
+        time.sleep(60)
