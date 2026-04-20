@@ -8,6 +8,7 @@ from internal.fim import register_fim_routes
 from internal.log_control import register_log_routes
 from dfir.artifacts import register_dfir_routes
 from host_manager.c2_connector import pingit
+from host_manager.c2_connector import daily_message_thread
 
 from logging_config import setup_logging
 
@@ -57,6 +58,7 @@ if __name__ == "__main__":
     args = get_arguments()
     app = create_app()
     threading.Thread(target=pingit, daemon=True).start()
+    threading.Thread(target=daily_message_thread, daemon=True).start()
 
     app.run(host=args.host, port=args.port)
 
