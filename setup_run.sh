@@ -42,4 +42,4 @@ echo "[+] Environment ready."
 echo "[+] Starting FusionSec Lab..."
 
 # Start the app with python3
-python3 app.py
+python3 app.py "$@"
