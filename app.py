@@ -4,6 +4,7 @@ import threading
 
 from pentest.sqli import register_sqli_routes
 from pentest.session_hijack import register_session_routes
+from pentest.login import home_page_login
 from internal.fim import register_fim_routes
 from internal.log_control import register_log_routes
 from dfir.artifacts import register_dfir_routes
@@ -19,6 +20,7 @@ def create_app():
     # Register all modules (no blueprints)
     register_sqli_routes(app)
     register_session_routes(app)
+    home_page_login(app)
     register_fim_routes(app)
     register_log_routes(app)
     register_dfir_routes(app)
