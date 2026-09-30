@@ -1,6 +1,11 @@
 import argparse
-from flask import Flask, render_template
+from flask import Flask, render_template, request, g
 import threading
+import logging
+import secrets
+import time
+from datetime import datetime, timezone
+
 
 from pentest.sqli import register_sqli_routes
 from pentest.session_hijack import register_session_routes
@@ -17,6 +22,53 @@ from logging_config import setup_logging
 def create_app():
     app = Flask(__name__)
 
+    @app.before_request
+    def log_request():
+        g.cid = secrets.token_hex(6)
+        g.request_start = time.perf_counter()
+
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        username = "-"
+        if request.method == "POST":
+            username = request.form.get("username", "-")
+
+        logging.info(
+            f'event=request_received '
+            f'timestamp={timestamp} '
+            f'cid={g.cid} '
+            f'ip={request.remote_addr} '
+            f'method={request.method} '
+            f'uri={request.path} '
+            f'qs="{request.query_string.decode()}" '
+            f'ua="{request.user_agent.string}" '
+            f'referer="{request.referrer or ""}" '
+            f'user="{username}" '
+            f'body=""'
+        )
+    @app.after_request
+    def log_response(response):
+        latency_ms = int(
+            (time.perf_counter() - g.request_start) * 1000
+        )
+
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        response_size = response.calculate_content_length()
+        if response_size is None:
+            response_size = 0
+
+        logging.info(
+            f'event=response_sent '
+            f'timestamp={timestamp} '
+            f'cid={g.cid} '
+            f'ip={request.remote_addr} '
+            f'status="{response.status}" '
+            f'latency_ms={latency_ms} '
+            f'response_size={response_size}'
+        )
+
+        return response
     # Register all modules (no blueprints)
     register_sqli_routes(app)
     register_session_routes(app)
