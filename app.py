@@ -1,5 +1,5 @@
 import argparse
-from flask import Flask, render_template, request, g
+from flask import Flask, app, render_template, request, g
 import threading
 import logging
 import secrets
@@ -17,11 +17,18 @@ from dfir.artifacts import register_dfir_routes
 from host_manager.c2_connector import pingit
 from host_manager.c2_connector import daily_message_thread
 
+from pentest.init_db import init_db
 from logging_config import setup_logging
 
 def create_app():
     app = Flask(__name__)
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+    init_db()
+
+    # Default global state
     app.config["SQLI_LAB_MODE"] = "unsafe"
+        app.config["SQLI_LAB_MODE"] = "unsafe"
 
     @app.before_request
     def log_request():
