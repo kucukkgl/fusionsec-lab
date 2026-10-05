@@ -19,11 +19,9 @@ from host_manager.c2_connector import daily_message_thread
 
 from logging_config import setup_logging
 
-# Default global state
-app.config["SQLI_LAB_MODE"] = "unsafe"
-
 def create_app():
     app = Flask(__name__)
+    app.config["SQLI_LAB_MODE"] = "unsafe"
 
     @app.before_request
     def log_request():
@@ -75,6 +73,7 @@ def create_app():
     # Register all modules (no blueprints)
     register_sqli_routes(app)
     register_session_routes(app)
+    register_admin_routes(app)
     home_page_login(app)
     register_fim_routes(app)
     register_log_routes(app)
@@ -118,4 +117,3 @@ if __name__ == "__main__":
     threading.Thread(target=daily_message_thread, daemon=True).start()
 
     app.run(host=args.host, port=args.port)
-

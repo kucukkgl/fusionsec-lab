@@ -7,11 +7,31 @@
 <body>
     <h1>SQL Injection Lab</h1>
 
-    <form action="/pentest/sqli/search" method="get">
+    <form action="/pentest/sqli" method="post">
         <label for="username">Username:</label>
         <input type="text" name="username" id="username">
         <button type="submit">Search</button>
     </form>
+
+    <p>Lab mode: {{ lab_mode }}</p>
+    {% if query %}
+        <h2>Executed query</h2>
+        <pre>{{ query }}</pre>
+    {% endif %}
+    {% if error %}
+        <p role="alert">Database error: {{ error }}</p>
+    {% elif query %}
+        <h2>Results</h2>
+        {% if results %}
+            <ul>
+                {% for row in results %}
+                    <li>ID: {{ row[0] }}, Username: {{ row[1] }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    {% endif %}
 
     <p>Try payloads like:</p>
     <pre>' OR '1'='1</pre>
