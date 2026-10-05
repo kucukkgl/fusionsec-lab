@@ -28,7 +28,6 @@ def create_app():
 
     # Default global state
     app.config["SQLI_LAB_MODE"] = "unsafe"
-        app.config["SQLI_LAB_MODE"] = "unsafe"
 
     @app.before_request
     def log_request():
