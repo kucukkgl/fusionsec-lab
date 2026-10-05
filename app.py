@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pentest.sqli import register_sqli_routes
 from pentest.session_hijack import register_session_routes
 from pentest.login import home_page_login
+from pentest.admin import register_admin_routes
 from internal.fim import register_fim_routes
 from internal.log_control import register_log_routes
 from dfir.artifacts import register_dfir_routes
@@ -18,6 +19,8 @@ from host_manager.c2_connector import daily_message_thread
 
 from logging_config import setup_logging
 
+# Default global state
+app.config["SQLI_LAB_MODE"] = "unsafe"
 
 def create_app():
     app = Flask(__name__)
