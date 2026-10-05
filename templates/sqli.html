@@ -15,5 +15,26 @@
 
     <p>Try payloads like:</p>
     <pre>' OR '1'='1</pre>
+
+    {% if query %}
+        <h2>Executed Query</h2>
+        <pre>{{ query }}</pre>
+    {% endif %}
+
+    {% if error %}
+        <h2>Database Error</h2>
+        <p>{{ error }}</p>
+    {% elif query %}
+        <h2>Returned Rows</h2>
+        {% if results %}
+            <ul>
+                {% for row in results %}
+                    <li>ID: {{ row[0] }}, Username: {{ row[1] }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    {% endif %}
 </body>
 </html>
