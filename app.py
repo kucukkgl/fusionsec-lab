@@ -1,5 +1,5 @@
 import argparse
-import tomllib
+import importlib
 from pathlib import Path
 from flask import Flask, app, render_template, request, g
 import threading
@@ -7,6 +7,11 @@ import logging
 import secrets
 import time
 from datetime import datetime, timezone
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    tomllib = importlib.import_module("tomli")
 
 
 from pentest.sqli import register_sqli_routes
