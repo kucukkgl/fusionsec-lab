@@ -1,4 +1,6 @@
 import argparse
+import tomllib
+from pathlib import Path
 from flask import Flask, app, render_template, request, g
 import threading
 import logging
@@ -21,9 +23,13 @@ from host_manager.c2_connector import daily_message_thread
 from pentest.init_db import init_db
 from logging_config import setup_logging
 
+
 def create_app():
     app = Flask(__name__)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+    with Path(__file__).with_name("pyproject.toml").open("rb") as project_file:
+        app.config["VERSION"] = tomllib.load(project_file)["project"]["version"]
+    logging.info("Starting FusionSec Lab version=%s", app.config["VERSION"])
 
     init_db()
 
@@ -103,7 +109,7 @@ def create_app():
 
     @app.route("/version")
     def version():
-        return "1.0"
+        return app.config["VERSION"]
 
     return app
 
