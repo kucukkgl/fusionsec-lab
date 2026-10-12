@@ -15,6 +15,7 @@ except ModuleNotFoundError:
 
 
 from pentest.sqli import register_sqli_routes
+from pentest.xss import register_xss_routes
 from pentest.session_hijack import register_session_routes
 from pentest.login import home_page_login
 from pentest.signup import register_signup_routes
@@ -90,6 +91,7 @@ def create_app():
         return response
     # Register all modules (no blueprints)
     register_sqli_routes(app)
+    register_xss_routes(app)
     register_session_routes(app)
     register_admin_routes(app)
     home_page_login(app)

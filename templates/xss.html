@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XSS Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        .result {
+            border: 1px solid #ccc;
+            padding: 12px;
+            margin-top: 16px;
+            background: #fafafa;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reflected XSS Demo</h1>
+    <p>This page intentionally reflects attacker-controlled input into the DOM without escaping it.</p>
+    <p>
+        The example link demonstrates a reflected-XSS trap: its script reads a fictional
+        record available to the visitor's browser and sends it to a fixed, same-app mock
+        receiver. No real data is used, and nothing is stored or forwarded elsewhere.
+    </p>
+
+    <form action="/pentest/xss" method="get">
+        <label for="q">Search term:</label>
+        <input type="text" id="q" name="q" value="{{ query }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <p>Training link: opening it runs the demonstration and shows what the mock receiver gets.</p>
+    <p><a href="{{ trap_url }}">Open the simulated XSS trap</a></p>
+
+    {% if query %}
+        <h2>Reflected Output</h2>
+        <div class="result">
+            {{ unsafe_html }}
+        </div>
+    {% endif %}
+
+    <p><a href="/">Back to lab home</a></p>
+</body>
+</html>
