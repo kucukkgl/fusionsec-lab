@@ -1,7 +1,9 @@
 import argparse
 import importlib
+import os
 from pathlib import Path
 from flask import Flask, app, render_template, request, g
+from flask.sessions import SecureCookieSessionInterface
 import threading
 import logging
 import secrets
@@ -29,8 +31,70 @@ from pentest.init_db import init_db
 from logging_config import setup_logging
 
 
+class LoggingSessionInterface(SecureCookieSessionInterface):
+    def save_session(self, app, session, response):
+        super().save_session(app, session, response)
+
+        cookie_name = app.config["SESSION_COOKIE_NAME"]
+        cookie_prefix = f"{cookie_name}="
+        for header in response.headers.getlist("Set-Cookie"):
+            if not header.startswith(cookie_prefix):
+                continue
+
+            cookie_value = header.partition(";")[0][len(cookie_prefix):]
+            attributes = [part.strip() for part in header.split(";")[1:]]
+            attributes_lower = [part.lower() for part in attributes]
+            same_site = next(
+                (
+                    part.partition("=")[2]
+                    for part in attributes
+                    if part.lower().startswith("samesite=")
+                ),
+                "unset",
+            )
+            lifetime = (
+                "cleared"
+                if not cookie_value
+                else (
+                    "persistent"
+                    if any(
+                        part.startswith(("expires=", "max-age="))
+                        for part in attributes_lower
+                    )
+                    else "browser-session"
+                )
+            )
+            logging.info(
+                "event=session_cookie action=%s name=%s lifetime=%s "
+                "httponly=%s secure=%s samesite=%s value_logged=false",
+                "cleared" if not cookie_value else "issued",
+                cookie_name,
+                lifetime,
+                "httponly" in attributes_lower,
+                "secure" in attributes_lower,
+                same_site,
+            )
+
+
 def create_app():
     app = Flask(__name__)
+    app.session_interface = LoggingSessionInterface()
+    # Flask signs session cookies with SECRET_KEY; no custom cookie signer is needed.
+    app.config["SECRET_KEY"] = (
+        os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32)
+    )
+    if not os.environ.get("FLASK_SECRET_KEY"):
+        logging.warning(
+            "FLASK_SECRET_KEY is unset; sessions will be invalidated on restart"
+        )
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=os.environ.get(
+            "SESSION_COOKIE_SECURE", "0"
+        ).lower() in {"1", "true", "yes"},
+    )
+
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     with Path(__file__).with_name("pyproject.toml").open("rb") as project_file:
         app.config["VERSION"] = tomllib.load(project_file)["project"]["version"]
