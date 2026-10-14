@@ -73,7 +73,6 @@ class LoggingSessionInterface(SecureCookieSessionInterface):
                 "httponly" in attributes_lower,
                 "secure" in attributes_lower,
                 same_site,
-                cookie_value
             )
 
 
