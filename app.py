@@ -64,17 +64,29 @@ class LoggingSessionInterface(SecureCookieSessionInterface):
                     else "browser-session"
                 )
             )
-            logging.info(
+            log_fields = (
                 "event=session_cookie action=%s name=%s lifetime=%s "
-                "httponly=%s secure=%s samesite=%s value_logged=false",
+                "httponly=%s secure=%s samesite=%s"
+            )
+            log_values = (
                 "cleared" if not cookie_value else "issued",
                 cookie_name,
                 lifetime,
                 "httponly" in attributes_lower,
                 "secure" in attributes_lower,
                 same_site,
-                cookie_value
             )
+            if app.config["LOG_SESSION_COOKIE_VALUE"]:
+                logging.warning(
+                    f"{log_fields} value=%s",
+                    *log_values,
+                    cookie_value,
+                )
+            else:
+                logging.info(
+                    f"{log_fields} value_logged=false",
+                    *log_values,
+                )
 
 
 def create_app():
@@ -98,7 +110,18 @@ def create_app():
 
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     with Path(__file__).with_name("pyproject.toml").open("rb") as project_file:
-        app.config["VERSION"] = tomllib.load(project_file)["project"]["version"]
+        project_config = tomllib.load(project_file)
+    app.config["VERSION"] = project_config["project"]["version"]
+    with Path(__file__).with_name("config.toml").open("rb") as config_file:
+        runtime_config = tomllib.load(config_file)
+    log_cookie_value = runtime_config.get("log_session_cookie_value", False)
+    if not isinstance(log_cookie_value, bool):
+        raise ValueError("log_session_cookie_value must be a TOML boolean")
+    app.config["LOG_SESSION_COOKIE_VALUE"] = log_cookie_value
+    if log_cookie_value:
+        logging.warning(
+            "Raw session-cookie logging is enabled; logs contain replayable credentials"
+        )
     logging.info("Starting FusionSec Lab version=%s", app.config["VERSION"])
 
     init_db()
