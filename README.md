@@ -2,6 +2,12 @@
 
 FusionSec Lab is a Flask-based security training application.
 
+## Signup
+
+New accounts require a username, a school ID, and a password. The school ID is
+stored with the account and shown on the authenticated welcome page as training
+data. Use fictional IDs in the lab.
+
 ## Session cookie logging
 
 The app logs when Flask issues or clears its session cookie, along with the
