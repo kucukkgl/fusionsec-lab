@@ -1,1 +1,2 @@
 log_session_cookie_value = false
+log_password_hash = false

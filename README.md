@@ -32,3 +32,25 @@ log_session_cookie_value = false
 ```
 
 The setting is read when the app starts, so restart the app after changing it.
+
+## Password-hash logging
+
+Password-hash values are not logged by default. To see the stored and submitted
+MD5 digests during signup and login in this training lab, set this option in
+`config.toml`:
+
+```toml
+log_password_hash = true
+```
+
+When enabled, the logs include the generated hash at signup and both the stored
+and submitted hashes during login verification. Plaintext passwords are never
+logged. Hashes are still sensitive verification material, especially with this
+lab's intentionally weak MD5 scheme; keep the option enabled only in an
+isolated lab and turn it off afterward:
+
+```toml
+log_password_hash = false
+```
+
+Restart the app after changing the setting.

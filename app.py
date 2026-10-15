@@ -113,13 +113,23 @@ def create_app():
     app.config["VERSION"] = project_config["project"]["version"]
     with Path(__file__).with_name("config.toml").open("rb") as config_file:
         runtime_config = tomllib.load(config_file)
-    log_cookie_value = runtime_config.get("log_session_cookie_value", False)
-    if not isinstance(log_cookie_value, bool):
-        raise ValueError("log_session_cookie_value must be a TOML boolean")
-    app.config["LOG_SESSION_COOKIE_VALUE"] = log_cookie_value
-    if log_cookie_value:
+    for setting in ("log_session_cookie_value", "log_password_hash"):
+        value = runtime_config.get(setting, False)
+        if not isinstance(value, bool):
+            raise ValueError(f"{setting} must be a TOML boolean")
+    app.config["LOG_SESSION_COOKIE_VALUE"] = runtime_config.get(
+        "log_session_cookie_value", False
+    )
+    app.config["LOG_PASSWORD_HASH"] = runtime_config.get(
+        "log_password_hash", False
+    )
+    if app.config["LOG_SESSION_COOKIE_VALUE"]:
         logging.warning(
             "Raw session-cookie logging is enabled; logs contain replayable credentials"
+        )
+    if app.config["LOG_PASSWORD_HASH"]:
+        logging.warning(
+            "Password-hash logging is enabled; logs contain password-verification material"
         )
     logging.info("Starting FusionSec Lab version=%s", app.config["VERSION"])
 
