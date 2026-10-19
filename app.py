@@ -16,7 +16,7 @@ except ModuleNotFoundError:
     tomllib = importlib.import_module("tomli")
 
 
-from pentest.sqli import register_sqli_routes
+from pentest.user_search import register_user_search_routes
 from pentest.login import home_page_login
 from pentest.signup import register_signup_routes
 from pentest.admin import register_admin_routes
@@ -136,7 +136,7 @@ def create_app():
     init_db()
 
     # Default global state
-    app.config["SQLI_LAB_MODE"] = "unsafe"
+    app.config["USER_SEARCH_LAB_MODE"] = "unsafe"
 
     @app.before_request
     def log_request():
@@ -186,7 +186,7 @@ def create_app():
 
         return response
     # Register all modules (no blueprints)
-    register_sqli_routes(app)
+    register_user_search_routes(app)
     register_admin_routes(app)
     home_page_login(app)
     register_signup_routes(app)
