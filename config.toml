@@ -1,4 +1,4 @@
 log_session_cookie_value = false
 log_password_hash = false
-tls_certificate_file = "192.151.xx.xx+2.pem"
-tls_private_key_file = "192.151.xx.xx+2-key.pem"
+tls_certificate_file = "tls_certificate_file.pem"
+tls_private_key_file = "tls_private_key_file.pem"
