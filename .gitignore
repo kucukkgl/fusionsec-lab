@@ -21,7 +21,7 @@ venv/
 .env/
 
 # TLS private key
-192.151.xx.xx+2-key.pem
+tls_private_key_file.pem
 
 # OS junk
 .DS_Store
