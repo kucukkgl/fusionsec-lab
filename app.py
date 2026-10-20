@@ -123,6 +123,12 @@ def create_app():
     app.config["LOG_PASSWORD_HASH"] = runtime_config.get(
         "log_password_hash", False
     )
+    for setting in ("tls_certificate_file", "tls_private_key_file"):
+        value = runtime_config.get(setting)
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{setting} must be a non-empty path")
+    app.config["TLS_CERTIFICATE_FILE"] = runtime_config["tls_certificate_file"]
+    app.config["TLS_PRIVATE_KEY_FILE"] = runtime_config["tls_private_key_file"]
     if app.config["LOG_SESSION_COOKIE_VALUE"]:
         logging.warning(
             "Raw session-cookie logging is enabled; logs contain replayable credentials"
@@ -231,4 +237,15 @@ if __name__ == "__main__":
     threading.Thread(target=pingit, daemon=True).start()
     threading.Thread(target=daily_message_thread, daemon=True).start()
 
-    app.run(host=args.host, port=args.port)
+    project_dir = Path(__file__).resolve().parent
+    certificate_file = project_dir / app.config["TLS_CERTIFICATE_FILE"]
+    private_key_file = project_dir / app.config["TLS_PRIVATE_KEY_FILE"]
+    if certificate_file.is_file() and private_key_file.is_file():
+        ssl_context = (str(certificate_file), str(private_key_file))
+    else:
+        logging.warning(
+            "TLS certificate or private key is missing; starting without HTTPS"
+        )
+        ssl_context = None
+
+    app.run(host=args.host, port=args.port, ssl_context=ssl_context)

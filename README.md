@@ -2,6 +2,14 @@
 
 FusionSec Lab is a Flask-based security training application.
 
+## HTTPS
+
+The app's built-in Flask server is configured to use the certificate and key
+named in `config.toml`. Place `192.151.xx.xx+2.pem` and
+`192.151.xx.xx+2-key.pem` in the project root to enable HTTPS. If either file
+is missing, the app logs a warning and starts without HTTPS. Keep the private
+key restricted and do not commit it.
+
 ## Signup
 
 New accounts require a username, a school ID, and a password. The school ID is
