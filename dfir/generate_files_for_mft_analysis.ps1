@@ -1,25 +1,23 @@
 <#
 .SYNOPSIS
-    Prompt-Based Ghost Record Generator for Downloads Folder
+    Manual Recycle Bin Ghost Record Generator for C:\Users\admin\Downloads
 .DESCRIPTION
-    Prompts for the username, targets C:\Users\<username>\Downloads, 
-    stages the payload with Mark of the Web, pauses 30 seconds for manual 
-    inspection, and deletes it to create an NTFS Ghost Record.
+    Creates a payload with Mark of the Web in C:\Users\admin\Downloads using a custom username, 
+    and pauses to let the student manually send the file to the Recycle Bin.
 #>
 
-# Prompt for the username (e.g., admin)
-$studentID = Read-Host "Enter your username (e.g., admin)"
+# Prompt for the username to build the custom filename
+$studentID = Read-Host "Enter your username/ID for the filename (e.g., goksel12345)"
 
 if ([string]::IsNullOrWhiteSpace($studentID)) {
     Write-Host "[!] Error: You must enter a valid username to proceed." -ForegroundColor Red
     exit
 }
 
-# Dynamically set the path using the prompted username
-$labPath = "C:\Users\$studentID\Downloads"
+# ALWAYS target the admin downloads folder
+$labPath = "C:\Users\admin\Downloads"
 
 if (!(Test-Path $labPath)) {
-    Write-Host "[!] Warning: $labPath does not exist. Creating it now..." -ForegroundColor Yellow
     New-Item -ItemType Directory -Path $labPath | Out-Null
 }
 
@@ -33,22 +31,29 @@ Set-Content -Path $ghostFile -Value "MZ simulate malicious executable payload...
 Write-Host "[+] Attaching Mark of the Web (Zone.Identifier)..." -ForegroundColor Cyan
 Set-Content -Path "$ghostFile:Zone.Identifier" -Value "[ZoneTransfer]`nZoneId=3"
 
-# Step 3: Informational Console Banner & 30-Second Countdown
+# Step 3: Interactive Manual Recycle Bin Instructions
 Write-Host "`n============================================================" -ForegroundColor Yellow
 Write-Host " [INFO] File is ACTIVE on disk in: $labPath" -ForegroundColor Yellow
-Write-Host " [INFO] MFT State: InUse = True | Real Clusters Assigned" -ForegroundColor Yellow
-Write-Host " [INFO] Open C:\Users\$studentID\Downloads to inspect the file!" -ForegroundColor Yellow
+Write-Host " [INFO] Filename: ${studentID}_downloaded_payload.exe" -ForegroundColor Yellow
+Write-Host " [ACTION REQUIRED] Open C:\Users\admin\Downloads right now!" -ForegroundColor Magenta
+Write-Host " [ACTION REQUIRED] Select the file and press 'DELETE' (Recycle Bin)" -ForegroundColor Magenta
 Write-Host "============================================================`n" -ForegroundColor Yellow
 
 for ($i = 30; $i -gt 0; $i--) {
-    Write-Host -NoNewline "`r[+] Deleting in $i seconds... (Check Downloads folder)   "
+    # Check if the user already deleted it manually
+    if (!(Test-Path $ghostFile)) {
+        Write-Host "`n[+] Detected! File was manually sent to the Recycle Bin by user." -ForegroundColor Green
+        break
+    }
+    Write-Host -NoNewline "`r[+] Waiting for manual deletion... Time remaining: ${i}s   "
     Start-Sleep -Seconds 1
 }
-Write-Host ""
 
-# Step 4: Delete to create the Ghost Record
-Remove-Item -Path $ghostFile
+# Fallback if timer runs out and file is still there
+if (Test-Path $ghostFile) {
+    Write-Host "`n[!] Timer expired. Force-deleting file to complete script execution." -ForegroundColor Yellow
+    Remove-Item -Path $ghostFile
+}
 
-Write-Host "`n[+] FILE DELETED!" -ForegroundColor Red
-Write-Host "[+] MFT State Change: 'InUse' flipped to False, Clusters Released." -ForegroundColor Green
-Write-Host "[+] It is now an NTFS Ghost Record! Ready for RawCopy extraction." -ForegroundColor Cyan
+Write-Host "`n[+] Lab Phase Complete!" -ForegroundColor Cyan
+Write-Host "[+] Forensic State: File transitioned via Recycle Bin ($R / $I files created + MFT Ghost Record)." -ForegroundColor Green
