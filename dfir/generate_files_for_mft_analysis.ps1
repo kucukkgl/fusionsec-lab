@@ -1,16 +1,25 @@
 <#
 .SYNOPSIS
-    Ghost Record Generator for C:\Users\admin\Downloads
+    Prompt-Based Ghost Record Generator for Downloads Folder
 .DESCRIPTION
-    Directly targets C:\Users\admin\Downloads, stages the payload 
-    with Mark of the Web, pauses 30 seconds for manual inspection, and 
-    deletes it to create an NTFS Ghost Record.
+    Prompts for the username, targets C:\Users\<username>\Downloads, 
+    stages the payload with Mark of the Web, pauses 30 seconds for manual 
+    inspection, and deletes it to create an NTFS Ghost Record.
 #>
 
-$studentID = "goksel12345"
-$labPath = "C:\Users\admin\Downloads"
+# Prompt for the username (e.g., admin)
+$studentID = Read-Host "Enter your username (e.g., admin)"
+
+if ([string]::IsNullOrWhiteSpace($studentID)) {
+    Write-Host "[!] Error: You must enter a valid username to proceed." -ForegroundColor Red
+    exit
+}
+
+# Dynamically set the path using the prompted username
+$labPath = "C:\Users\$studentID\Downloads"
 
 if (!(Test-Path $labPath)) {
+    Write-Host "[!] Warning: $labPath does not exist. Creating it now..." -ForegroundColor Yellow
     New-Item -ItemType Directory -Path $labPath | Out-Null
 }
 
@@ -28,11 +37,11 @@ Set-Content -Path "$ghostFile:Zone.Identifier" -Value "[ZoneTransfer]`nZoneId=3"
 Write-Host "`n============================================================" -ForegroundColor Yellow
 Write-Host " [INFO] File is ACTIVE on disk in: $labPath" -ForegroundColor Yellow
 Write-Host " [INFO] MFT State: InUse = True | Real Clusters Assigned" -ForegroundColor Yellow
-Write-Host " [INFO] Open C:\Users\admin\Downloads to inspect the file!" -ForegroundColor Yellow
+Write-Host " [INFO] Open C:\Users\$studentID\Downloads to inspect the file!" -ForegroundColor Yellow
 Write-Host "============================================================`n" -ForegroundColor Yellow
 
 for ($i = 30; $i -gt 0; $i--) {
-    Write-Host -NoNewline "`r[+] Deleting in $i seconds... (Check C:\Users\admin\Downloads) "
+    Write-Host -NoNewline "`r[+] Deleting in $i seconds... (Check Downloads folder)   "
     Start-Sleep -Seconds 1
 }
 Write-Host ""
