@@ -1,37 +1,45 @@
 <#
 .SYNOPSIS
-    Ghost Record Artifact Generator for Student DFIR Labs
+    Ghost Record Generator for C:\Users\admin\Downloads
 .DESCRIPTION
-    Prompts the student for their 6+2 username, creates a simulated payload 
-    with a Mark of the Web (Zone.Identifier) in their Downloads folder, 
-    and immediately deletes it to create a textbook NTFS Ghost Record.
-    Requires Administrator privileges.
+    Directly targets C:\Users\admin\Downloads, stages the payload 
+    with Mark of the Web, pauses 30 seconds for manual inspection, and 
+    deletes it to create an NTFS Ghost Record.
 #>
 
-# Prompt the student for their unique 6+2 username
-$studentID = Read-Host "Enter your UC 6+2 username (e.g., kucukkgl)"
+$studentID = "goksel12345"
+$labPath = "C:\Users\admin\Downloads"
 
-if ([string]::IsNullOrWhiteSpace($studentID)) {
-    Write-Host "[!] Error: You must enter a valid 6+2 username to proceed." -ForegroundColor Red
-    exit
+if (!(Test-Path $labPath)) {
+    New-Item -ItemType Directory -Path $labPath | Out-Null
 }
 
-# Target the active user's Downloads directory
-$labPath = "$env:USERPROFILE\Downloads"
-Write-Host "`n[+] Staging Ghost Record artifact for user '$studentID' in: $labPath" -ForegroundColor Cyan
-
-# Define the target ghost file path
 $ghostFile = "$labPath\${studentID}_downloaded_payload.exe"
 
-# Step 1: Create the dummy payload file in Downloads
+# Step 1: Create the file
+Write-Host "[+] Creating target file: $ghostFile" -ForegroundColor Cyan
 Set-Content -Path $ghostFile -Value "MZ simulate malicious executable payload..."
 
-# Step 2: Attach the Mark of the Web alternate data stream (ZoneId=3 indicates internet download)
-$zoneIdContent = "[ZoneTransfer]`nZoneId=3"
-Set-Content -Path "$ghostFile:Zone.Identifier" -Value $zoneIdContent
+# Step 2: Attach Mark of the Web
+Write-Host "[+] Attaching Mark of the Web (Zone.Identifier)..." -ForegroundColor Cyan
+Set-Content -Path "$ghostFile:Zone.Identifier" -Value "[ZoneTransfer]`nZoneId=3"
 
-# Step 3: Delete the file immediately to flip InUse to False while preserving metadata (Ghost Record)
+# Step 3: Informational Console Banner & 30-Second Countdown
+Write-Host "`n============================================================" -ForegroundColor Yellow
+Write-Host " [INFO] File is ACTIVE on disk in: $labPath" -ForegroundColor Yellow
+Write-Host " [INFO] MFT State: InUse = True | Real Clusters Assigned" -ForegroundColor Yellow
+Write-Host " [INFO] Open C:\Users\admin\Downloads to inspect the file!" -ForegroundColor Yellow
+Write-Host "============================================================`n" -ForegroundColor Yellow
+
+for ($i = 30; $i -gt 0; $i--) {
+    Write-Host -NoNewline "`r[+] Deleting in $i seconds... (Check C:\Users\admin\Downloads) "
+    Start-Sleep -Seconds 1
+}
+Write-Host ""
+
+# Step 4: Delete to create the Ghost Record
 Remove-Item -Path $ghostFile
-Write-Host "  -> Success! Created and deleted Ghost Record: ${studentID}_downloaded_payload.exe" -ForegroundColor Green
 
-Write-Host "`n[+] Ready for RawCopy and MFTECmd extraction. Look for InUse = False and FileSize > 0 in Colab!" -ForegroundColor Cyan
+Write-Host "`n[+] FILE DELETED!" -ForegroundColor Red
+Write-Host "[+] MFT State Change: 'InUse' flipped to False, Clusters Released." -ForegroundColor Green
+Write-Host "[+] It is now an NTFS Ghost Record! Ready for RawCopy extraction." -ForegroundColor Cyan
