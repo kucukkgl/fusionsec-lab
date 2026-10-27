@@ -1,48 +1,37 @@
 <#
 .SYNOPSIS
-    Automated NTFS Artifact & Size Scenario Generator for Lab Training
+    Ghost Record Artifact Generator for Student DFIR Labs
 .DESCRIPTION
-    Creates resident, staged, deleted (ghost), and slack-space test artifacts
-    using the 'kucukkgl' naming convention. Requires Administrator privileges.
+    Prompts the student for their 6+2 username, creates a simulated payload 
+    with a Mark of the Web (Zone.Identifier) in their Downloads folder, 
+    and immediately deletes it to create a textbook NTFS Ghost Record.
+    Requires Administrator privileges.
 #>
 
-# Ensure directory exists
-$labPath = "C:\suspicious"
-if (!(Test-Path $labPath)) {
-    New-Item -ItemType Directory -Path $labPath | Out-Null
-    Write-Host "[+] Created directory: $labPath" -ForegroundColor Green
+# Prompt the student for their unique 6+2 username
+$studentID = Read-Host "Enter your UC 6+2 username (e.g., kucukkgl)"
+
+if ([string]::IsNullOrWhiteSpace($studentID)) {
+    Write-Host "[!] Error: You must enter a valid 6+2 username to proceed." -ForegroundColor Red
+    exit
 }
 
-Write-Host "`n[+] Generating kucukkgl NTFS Lab Artifacts..." -ForegroundColor Cyan
+# Target the active user's Downloads directory
+$labPath = "$env:USERPROFILE\Downloads"
+Write-Host "`n[+] Staging Ghost Record artifact for user '$studentID' in: $labPath" -ForegroundColor Cyan
 
-# 1. Resident File (Fits entirely inside MFT record, tiny size)
-$residentFile = "$labPath\kucukkgl_resident.txt"
-Set-Content -Path $residentFile -Value "CTF{kucukkgl_resident_mft_data_stream}"
-Write-Host "  -> Created Resident File: $residentFile"
+# Define the target ghost file path
+$ghostFile = "$labPath\${studentID}_downloaded_payload.exe"
 
-# 2. Staged Artifact / Placeholder (Allocated clusters via fsutil with 0 bytes real size)
-$stagedFile = "$labPath\kucukkgl_staged.tmp"
-if (Test-Path $stagedFile) { Remove-Item $stagedFile }
-fsutil file createnew $stagedFile 4096 | Out-Null
-Write-Host "  -> Created Staged Artifact (4096 allocated, 0 real): $stagedFile"
+# Step 1: Create the dummy payload file in Downloads
+Set-Content -Path $ghostFile -Value "MZ simulate malicious executable payload..."
 
-# 3. Ghost Record / Deleted File (Creates file with data, then deletes it -> InUse: False)
-$deletedFile = "$labPath\kucukkgl_deleted.log"
-Set-Content -Path $deletedFile -Value "Sensitive investigation log data for user kucukkgl..."
-Remove-Item -Path $deletedFile
-Write-Host "  -> Created Ghost Record (Created & Deleted): $deletedFile"
+# Step 2: Attach the Mark of the Web alternate data stream (ZoneId=3 indicates internet download)
+$zoneIdContent = "[ZoneTransfer]`nZoneId=3"
+Set-Content -Path "$ghostFile:Zone.Identifier" -Value $zoneIdContent
 
-# 4. Slack Space Demo File (Real size 3200 bytes inside a 4096 byte cluster)
-$slackFile = "$labPath\kucukkgl_slack.txt"
-"A" * 3200 | Set-Content -Path $slackFile
-Write-Host "  -> Created Slack Space File (3200 bytes real / 1 cluster): $slackFile"
+# Step 3: Delete the file immediately to flip InUse to False while preserving metadata (Ghost Record)
+Remove-Item -Path $ghostFile
+Write-Host "  -> Success! Created and deleted Ghost Record: ${studentID}_downloaded_payload.exe" -ForegroundColor Green
 
-# 5. Timestomped Executable (Simulate our earlier executable test)
-$exeFile = "$labPath\kucukkgl_it3072.exe"
-[System.IO.File]::WriteAllText($exeFile, "MZ")
-$oldDate = Get-Date "2010-01-01 12:00:00"
-[System.IO.File]::SetCreationTime($exeFile, $oldDate)
-[System.IO.File]::SetLastWriteTime($exeFile, $oldDate)
-Write-Host "  -> Created Timestomped Executable ($SI backdated to 2010): $exeFile"
-
-Write-Host "`n[+] Lab environment successfully staged! Ready for RawCopy and MFTECmd extraction." -ForegroundColor Green
+Write-Host "`n[+] Ready for RawCopy and MFTECmd extraction. Look for InUse = False and FileSize > 0 in Colab!" -ForegroundColor Cyan
