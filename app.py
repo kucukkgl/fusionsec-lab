@@ -2,7 +2,7 @@ import argparse
 import importlib
 import os
 from pathlib import Path
-from flask import Flask, app, render_template, request, g
+from flask import Flask, app, render_template, request, g, Response
 from flask.sessions import SecureCookieSessionInterface
 import threading
 import logging
@@ -193,6 +193,19 @@ def create_app():
     register_fim_routes(app)
     register_log_routes(app)
     register_dfir_routes(app)
+
+    @app.route("/robots.txt")
+    def robots_txt():
+        robots = """User-agent: *
+Disallow: /pentest/login
+Disallow: /pentest/signup
+Disallow: /pentest/welcome
+Disallow: /pentest/logout
+Disallow: /pentest/sqli
+Disallow: /admin/toggle-sqli
+Disallow: /kucukkgl
+"""
+        return Response(robots, mimetype="text/plain")
 
     # Homepage
     @app.route("/")
