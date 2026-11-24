@@ -2,6 +2,26 @@
 
 FusionSec Lab is a Flask-based security training application.
 
+## Docker
+
+Build and run the lab:
+
+```sh
+docker build -t fusionsec-lab .
+docker run --rm --name fusionsec-lab -p 8080:80 fusionsec-lab
+```
+
+The service listens on port 80 inside the container; Docker publishes it as
+port 8080 on all VM interfaces. Open `http://<server-lan-ip>:8080` from another
+machine.
+The image runs as a non-root user and continues to use SQLite. The database is
+initialized with seed data whenever the service starts, so account changes are
+not preserved across container restarts.
+
+This application contains intentionally vulnerable training modules. Keep it
+on an isolated lab network, restrict inbound port 8080 using the host firewall,
+and do not expose it directly to the internet.
+
 ## Signup
 
 New accounts require a username, a school ID, and a password. The school ID is
