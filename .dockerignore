@@ -1,0 +1,16 @@
+.git
+.DS_Store
+.env
+venv/
+__pycache__/
+*.py[cod]
+*.db
+logs/
+dfir_artifacts/
+fim/created/
+fim/modified/
+fim/deleted/
+fim/uploaded/
+fim/beacon/
+runtime/
+pentest/alpine_tiny_cloud/
