@@ -201,7 +201,6 @@ Disallow: /pentest/login
 Disallow: /pentest/signup
 Disallow: /pentest/welcome
 Disallow: /pentest/logout
-Disallow: /pentest/sqli
 Disallow: /admin/toggle-sqli
 Disallow: /kucukkgl
 """
